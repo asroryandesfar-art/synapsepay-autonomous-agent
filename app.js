@@ -29,7 +29,9 @@ const els = {
 
 const API_BASE = window.location.protocol === "file:" ? "http://127.0.0.1:8787" : "";
 const buttonLabels = new Map();
+const STATIC_DEMO = window.location.hostname.endsWith("github.io") || new URLSearchParams(window.location.search).has("static");
 let latestState = null;
+let staticDemoSeed = 1;
 
 for (const button of [els.runDemo, els.runNow, els.toggleAgent]) {
   buttonLabels.set(button, button.textContent);
@@ -53,7 +55,11 @@ async function refresh() {
     renderReadiness(status.readiness);
     updateControls(status);
   } catch (error) {
-    renderOffline(error);
+    if (STATIC_DEMO) {
+      renderStaticDemo();
+    } else {
+      renderOffline(error);
+    }
   }
 }
 
@@ -244,6 +250,12 @@ els.runNow.addEventListener("click", async () => {
 els.runDemo.addEventListener("click", async () => {
   setBusy(els.runDemo, true, "Building proof");
   try {
+    if (STATIC_DEMO) {
+      staticDemoSeed += 1;
+      await delay(650);
+      renderStaticDemo();
+      return;
+    }
     await fetchJson("/api/demo/run", { method: "POST" });
     await refresh();
   } catch (error) {
@@ -270,6 +282,179 @@ async function fetchJson(url, options) {
   const response = await fetch(`${API_BASE}${url}`, options);
   if (!response.ok) throw new Error(`${url} failed with ${response.status}`);
   return response.json();
+}
+
+function renderStaticDemo() {
+  const payload = staticStatus();
+  const report = staticReport(payload.state.lastRunId);
+  const events = staticEvents(payload.state.lastRunId);
+  latestState = payload.state;
+  renderStatus(payload);
+  renderWorkflow(payload.workflow);
+  renderReport(report);
+  renderDatabase(payload.database, payload.api);
+  renderRuns(payload.state.runs);
+  renderLedger(payload.state.ledger);
+  renderEvents(events);
+  renderReadiness(payload.readiness);
+  updateControls(payload);
+  els.mode.textContent = "static proof replay";
+  els.workflowStatus.textContent = "github pages";
+  els.reportStatus.textContent = "demo";
+  els.dbStatus.textContent = "static-json";
+}
+
+function staticStatus() {
+  const runId = `run_github_pages_demo_${String(staticDemoSeed).padStart(3, "0")}`;
+  const ts = new Date().toISOString();
+  const ledger = staticLedger(runId, ts);
+  const api = [
+    "GET /api/status",
+    "GET /api/health",
+    "GET /api/readiness",
+    "GET /api/events",
+    "GET /api/runs",
+    "GET /api/ledger",
+    "GET /api/reports/latest",
+    "GET /api/manifest",
+    "GET /api/db",
+    "POST /api/run",
+    "POST /api/demo/run",
+    "POST /api/start",
+    "POST /api/stop",
+    "POST /api/x402"
+  ];
+  return {
+    mode: "demo",
+    autoStart: false,
+    runIntervalMs: 300000,
+    readiness: {
+      mode: "live",
+      status: "needs-secrets",
+      runReady: false,
+      registerReady: false,
+      credentialReady: false,
+      autoStartReady: false,
+      missing: ["sap_rpc_url", "ace_platform_token", "ace_x402_private_key", "ace_x402_order_id", "onchain_guard"],
+      checks: [
+        { id: "sap_rpc_url", label: "SAP RPC URL", ok: false, action: "Set SAP_RPC_URL to a real Synapse RPC endpoint." },
+        { id: "sap_wallet_path", label: "SAP wallet path", ok: true, action: "Ready" },
+        { id: "sap_agent_wallet", label: "SAP agent wallet", ok: true, action: "Ready" },
+        { id: "ace_platform_token", label: "Ace platform token", ok: false, action: "Set ACE_PLATFORM_TOKEN." },
+        { id: "ace_x402_private_key", label: "Ace x402 private key", ok: false, action: "Set ACE_X402_PRIVATE_KEY to a 32-byte EVM private key." },
+        { id: "ace_x402_order_id", label: "Ace order id", ok: false, action: "Set ACE_X402_ORDER_ID." },
+        { id: "onchain_guard", label: "On-chain mutation guard", ok: false, action: "Enable only after funded wallet validation." }
+      ]
+    },
+    database: {
+      engine: "static-json",
+      stateBytes: 3911,
+      eventsBytes: 3163,
+      reports: 1
+    },
+    api,
+    workflow: {
+      name: "SynapsePay Autonomous Payment Workflow",
+      requiredCapabilities: ["sap:discovery", "ace:ai-execution", "x402:payment", "sentinel:verification"],
+      aceServices: [
+        { id: "market-brief", kind: "openai.chat.completions", capability: "reasoning", estimatedUsd: 0.04 },
+        { id: "workflow-risk", kind: "openai.embeddings.create", capability: "risk-signal", estimatedUsd: 0.03 },
+        { id: "demo-asset", kind: "images.generate", capability: "demo-artifact", estimatedUsd: 0.06 }
+      ]
+    },
+    state: {
+      status: "idle",
+      lastRunAt: ts,
+      lastRunId: runId,
+      runs: [
+        {
+          runId,
+          status: "success",
+          trigger: "demo-schedule",
+          startedAt: ts,
+          completedAt: ts,
+          summary: {
+            paymentEvents: 4,
+            estimatedUsd: 0.15,
+            aceServices: ["openai.chat.completions", "openai.embeddings.create", "images.generate"]
+          }
+        }
+      ],
+      ledger,
+      metrics: {
+        totalRuns: 1,
+        successfulRuns: 1,
+        failedRuns: 0,
+        blockedRuns: 0,
+        autonomousRuns: 1,
+        sapDiscoveries: 1,
+        aceServiceCalls: 3,
+        sentinelCalls: 1,
+        paymentEvents: 4,
+        estimatedUsdVolume: 0.15
+      }
+    }
+  };
+}
+
+function staticReport(runId) {
+  return {
+    runId,
+    mode: "demo",
+    autonomous: true,
+    trigger: {
+      source: "demo-schedule",
+      scheduled: true,
+      title: "SAP x402 autonomous payment opportunity"
+    },
+    sapDiscovery: {
+      toolsFound: 3,
+      selectedTools: [
+        { id: "sap.discovery.index", protocol: "SAP", confidence: 0.93 },
+        { id: "synapse.sentinel.audit", protocol: "SAP", confidence: 0.9 },
+        { id: "ace.x402.facilitator", protocol: "x402", confidence: 0.86 }
+      ]
+    },
+    aceExecution: {
+      distinctServices: ["openai.chat.completions", "openai.embeddings.create", "images.generate"]
+    },
+    sentinel: {
+      verdict: "pass",
+      score: 0.87
+    },
+    paymentLedger: staticLedger(runId, new Date().toISOString()),
+    paymentSummary: {
+      events: 4,
+      estimatedUsd: 0.15,
+      networks: ["base", "demo-sap"],
+      assets: ["USDC"]
+    }
+  };
+}
+
+function staticLedger(runId, ts) {
+  return [
+    { runId, stepId: "market-brief", provider: "AceDataCloud", mode: "demo", ts, usdAmount: 0.04, currency: "USD", network: "base", asset: "USDC" },
+    { runId, stepId: "workflow-risk", provider: "AceDataCloud", mode: "demo", ts, usdAmount: 0.03, currency: "USD", network: "base", asset: "USDC" },
+    { runId, stepId: "demo-asset", provider: "AceDataCloud", mode: "demo", ts, usdAmount: 0.06, currency: "USD", network: "base", asset: "USDC" },
+    { runId, stepId: "sentinel-verification", provider: "SynapseSentinel", mode: "demo", ts, usdAmount: 0.02, currency: "USD", network: "demo-sap", asset: "USDC" }
+  ];
+}
+
+function staticEvents(runId) {
+  const ts = new Date().toISOString();
+  return [
+    { ts, level: "info", type: "agent.run.started", runId, message: "GitHub Pages static proof replay" },
+    { ts, level: "info", type: "sap.discovery.completed", runId },
+    { ts, level: "info", type: "ace.call.completed", runId, message: "3 Ace capabilities" },
+    { ts, level: "info", type: "sentinel.call.completed", runId, message: "verdict pass" },
+    { ts, level: "info", type: "agent.payment.summary", runId, message: "$0.15 / 4 payment events" },
+    { ts, level: "info", type: "agent.run.completed", runId, message: "success" }
+  ];
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function renderOffline(error) {
