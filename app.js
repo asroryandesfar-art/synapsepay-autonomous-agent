@@ -1,19 +1,26 @@
 const els = {
   status: document.querySelector("#status"),
   volume: document.querySelector("#volume"),
+  paymentEvents: document.querySelector("#paymentEvents"),
+  successfulRuns: document.querySelector("#successfulRuns"),
+  lastRunId: document.querySelector("#lastRunId"),
   aceCalls: document.querySelector("#aceCalls"),
   sentinelCalls: document.querySelector("#sentinelCalls"),
   workflow: document.querySelector("#workflow"),
+  workflowStatus: document.querySelector("#workflowStatus"),
   events: document.querySelector("#events"),
   runs: document.querySelector("#runs"),
   ledger: document.querySelector("#ledger"),
+  ledgerCount: document.querySelector("#ledgerCount"),
   mode: document.querySelector("#mode"),
   eventCount: document.querySelector("#eventCount"),
+  apiCount: document.querySelector("#apiCount"),
   runDemo: document.querySelector("#runDemo"),
   runNow: document.querySelector("#runNow"),
   toggleAgent: document.querySelector("#toggleAgent"),
   readiness: document.querySelector("#readiness"),
   readinessStatus: document.querySelector("#readinessStatus"),
+  readinessBadge: document.querySelector("#readinessBadge"),
   reportStatus: document.querySelector("#reportStatus"),
   reportSummary: document.querySelector("#reportSummary"),
   dbStatus: document.querySelector("#dbStatus"),
@@ -21,7 +28,12 @@ const els = {
 };
 
 const API_BASE = window.location.protocol === "file:" ? "http://127.0.0.1:8787" : "";
+const buttonLabels = new Map();
 let latestState = null;
+
+for (const button of [els.runDemo, els.runNow, els.toggleAgent]) {
+  buttonLabels.set(button, button.textContent);
+}
 
 async function refresh() {
   try {
@@ -46,12 +58,22 @@ async function refresh() {
 }
 
 function renderStatus(payload) {
-  const metrics = payload.state.metrics;
+  const metrics = payload.state.metrics || {};
+  const readiness = payload.readiness;
+  const latestRun = payload.state.runs?.[0];
+  const apiSize = payload.api?.length || 0;
+
   els.status.textContent = payload.state.status;
   els.volume.textContent = money(metrics.estimatedUsdVolume);
-  els.aceCalls.textContent = metrics.aceServiceCalls;
-  els.sentinelCalls.textContent = metrics.sentinelCalls;
-  els.mode.textContent = payload.readiness?.status || payload.mode;
+  els.paymentEvents.textContent = `${metrics.paymentEvents || 0} payment events`;
+  els.successfulRuns.textContent = metrics.successfulRuns || 0;
+  els.lastRunId.textContent = latestRun ? latestRun.runId : "No run yet";
+  els.aceCalls.textContent = metrics.aceServiceCalls || 0;
+  els.sentinelCalls.textContent = metrics.sentinelCalls || 0;
+  els.mode.textContent = readiness?.status || payload.mode;
+  els.readinessBadge.textContent = readiness?.status || payload.mode;
+  els.apiCount.textContent = `${apiSize} endpoints`;
+  els.workflowStatus.textContent = readiness?.status || payload.mode;
   els.toggleAgent.textContent = payload.state.status === "idle" ? "Start Auto" : "Pause";
 }
 
@@ -61,7 +83,9 @@ function renderReadiness(readiness) {
     els.readiness.innerHTML = emptyOrRows([], () => "");
     return;
   }
-  els.readinessStatus.textContent = readiness.status;
+
+  const ready = readiness.checks.filter((item) => item.ok).length;
+  els.readinessStatus.textContent = `${ready}/${readiness.checks.length} ready`;
   els.readiness.innerHTML = readiness.checks
     .map(
       (item) => `
@@ -91,12 +115,20 @@ function renderReport(report) {
 
   els.reportStatus.textContent = report.mode;
   const services = report.aceExecution?.distinctServices || [];
+  const scheduled = report.trigger?.scheduled ? "scheduled" : report.trigger?.source || "manual";
   els.reportSummary.innerHTML = `
     <div class="report-grid">
       <div><span>Run</span><strong>${escapeHtml(report.runId)}</strong></div>
       <div><span>Payments</span><strong>${report.paymentSummary?.events || 0}</strong></div>
       <div><span>Volume</span><strong>${money(report.paymentSummary?.estimatedUsd || 0)}</strong></div>
       <div><span>Sentinel</span><strong>${escapeHtml(report.sentinel?.verdict || "pending")}</strong></div>
+    </div>
+    <div class="proof-strip">
+      <div class="proof-card"><span>Trigger</span><strong>${escapeHtml(scheduled)}</strong></div>
+      <div class="proof-card"><span>SAP Tools</span><strong>${report.sapDiscovery?.toolsFound || 0}</strong></div>
+      <div class="proof-card"><span>Ace Services</span><strong>${services.length}</strong></div>
+      <div class="proof-card"><span>Networks</span><strong>${escapeHtml((report.paymentSummary?.networks || []).join(", ") || "pending")}</strong></div>
+      <div class="proof-card"><span>Assets</span><strong>${escapeHtml((report.paymentSummary?.assets || []).join(", ") || "pending")}</strong></div>
     </div>
     <div class="service-list">${services.map((service) => `<span>${escapeHtml(service)}</span>`).join("")}</div>
   `;
@@ -110,7 +142,7 @@ function renderDatabase(database, api) {
     <div class="db-row"><strong>Events</strong><span>${formatBytes(database.eventsBytes)}</span></div>
     <div class="db-row"><strong>Reports</strong><span>${database.reports}</span></div>
     <div class="db-row"><strong>API</strong><span>${api?.length || 0} endpoints</span></div>
-    <div class="api-list">${(api || []).slice(0, 8).map((endpoint) => `<span>${escapeHtml(endpoint)}</span>`).join("")}</div>
+    <div class="api-list">${(api || []).slice(0, 10).map((endpoint) => `<span>${escapeHtml(endpoint)}</span>`).join("")}</div>
   `;
 }
 
@@ -169,6 +201,7 @@ function renderRuns(runs) {
 
 function renderLedger(ledger) {
   const recent = [...ledger].reverse().slice(0, 18);
+  els.ledgerCount.textContent = `${ledger.length} events`;
   els.ledger.innerHTML = emptyOrRows(
     recent,
     (item) => `
@@ -197,32 +230,39 @@ function renderEvents(events) {
 }
 
 els.runNow.addEventListener("click", async () => {
-  els.runNow.disabled = true;
+  setBusy(els.runNow, true, "Running");
   try {
     await fetchJson("/api/run", { method: "POST" });
     await refresh();
   } catch (error) {
     renderOffline(error);
+  } finally {
+    setBusy(els.runNow, false);
   }
 });
 
 els.runDemo.addEventListener("click", async () => {
-  els.runDemo.disabled = true;
+  setBusy(els.runDemo, true, "Building proof");
   try {
     await fetchJson("/api/demo/run", { method: "POST" });
     await refresh();
   } catch (error) {
     renderOffline(error);
+  } finally {
+    setBusy(els.runDemo, false);
   }
 });
 
 els.toggleAgent.addEventListener("click", async () => {
   const shouldStart = latestState?.status === "idle";
+  setBusy(els.toggleAgent, true, shouldStart ? "Starting" : "Pausing");
   try {
     await fetchJson(shouldStart ? "/api/start" : "/api/stop", { method: "POST" });
     await refresh();
   } catch (error) {
     renderOffline(error);
+  } finally {
+    setBusy(els.toggleAgent, false);
   }
 });
 
@@ -236,12 +276,19 @@ function renderOffline(error) {
   latestState = { status: "offline" };
   els.status.textContent = "offline";
   els.volume.textContent = "$0.00";
+  els.paymentEvents.textContent = "0 payment events";
+  els.successfulRuns.textContent = "0";
+  els.lastRunId.textContent = "No API connection";
   els.aceCalls.textContent = "0";
   els.sentinelCalls.textContent = "0";
   els.mode.textContent = "api";
+  els.workflowStatus.textContent = "offline";
   els.readinessStatus.textContent = "offline";
+  els.readinessBadge.textContent = "offline";
+  els.apiCount.textContent = "0 endpoints";
   els.reportStatus.textContent = "offline";
   els.dbStatus.textContent = "offline";
+  els.ledgerCount.textContent = "0 events";
   els.reportSummary.innerHTML = emptyPanel("No API connection");
   els.dbSummary.innerHTML = emptyPanel("No API connection");
   els.readiness.innerHTML = `
@@ -273,6 +320,12 @@ function renderOffline(error) {
       <span>${escapeHtml(error.message)}</span>
     </div>
   `;
+}
+
+function setBusy(button, busy, label) {
+  if (!button) return;
+  if (busy) button.disabled = true;
+  button.textContent = busy ? label : buttonLabels.get(button);
 }
 
 function emptyPanel(message) {

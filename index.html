@@ -8,91 +8,129 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <main class="shell">
-      <header class="topbar">
-        <div>
-          <h1>SynapsePay Autonomous Agent</h1>
-          <p id="subtitle">SAP discovery, Ace execution, Sentinel audit, x402 ledger</p>
+    <main class="app-shell">
+      <header class="app-header">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">S</div>
+          <div>
+            <h1>SynapsePay Autonomous Agent</h1>
+            <p>SAP discovery, Ace execution, Sentinel audit, x402 ledger</p>
+          </div>
+        </div>
+        <div class="header-status">
+          <span id="readinessBadge" class="state-pill">checking</span>
+          <span id="apiCount" class="state-pill neutral">0 endpoints</span>
         </div>
         <div class="actions">
-          <button id="runDemo" type="button" class="secondary">Demo Proof</button>
+          <button id="runDemo" type="button" class="primary">Demo Proof</button>
           <button id="runNow" type="button">Run Once</button>
           <button id="toggleAgent" type="button">Start Auto</button>
         </div>
       </header>
 
-      <section class="status-grid" aria-label="Agent metrics">
-        <article>
-          <span>Status</span>
+      <section class="metrics-grid" aria-label="Agent metrics">
+        <article class="metric-card state-card">
+          <span>Agent State</span>
           <strong id="status">...</strong>
+          <small id="mode">checking</small>
         </article>
-        <article>
+        <article class="metric-card volume-card">
           <span>Payment Volume</span>
           <strong id="volume">$0.00</strong>
+          <small id="paymentEvents">0 payment events</small>
         </article>
-        <article>
-          <span>Ace Calls</span>
+        <article class="metric-card">
+          <span>Successful Runs</span>
+          <strong id="successfulRuns">0</strong>
+          <small id="lastRunId">No run yet</small>
+        </article>
+        <article class="metric-card">
+          <span>Ace AI Execution</span>
           <strong id="aceCalls">0</strong>
+          <small>3 capabilities per proof run</small>
         </article>
-        <article>
+        <article class="metric-card">
           <span>Sentinel Calls</span>
           <strong id="sentinelCalls">0</strong>
+          <small>verification gate</small>
         </article>
       </section>
 
-      <section class="layout">
-        <div class="main-column">
-          <section class="panel">
-            <div class="panel-heading">
-              <h2>Workflow</h2>
-              <span id="mode">demo</span>
+      <section class="command-grid">
+        <section class="panel workflow-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Autonomous Workflow</h2>
+              <p>Trigger to report without manual approval</p>
             </div>
-            <ol id="workflow" class="timeline"></ol>
-          </section>
+            <span id="workflowStatus">ready</span>
+          </div>
+          <ol id="workflow" class="timeline"></ol>
+        </section>
 
-          <section class="panel">
-            <div class="panel-heading">
+        <section class="panel evidence-panel">
+          <div class="panel-heading">
+            <div>
               <h2>Latest Evidence</h2>
-              <span id="reportStatus">empty</span>
+              <p>Report, receipt count, volume, Sentinel verdict</p>
             </div>
-            <div id="reportSummary" class="report-summary"></div>
-          </section>
+            <span id="reportStatus">empty</span>
+          </div>
+          <div id="reportSummary" class="report-summary"></div>
+        </section>
 
-          <section class="panel">
-            <div class="panel-heading">
-              <h2>Event Stream</h2>
-              <span id="eventCount">0 events</span>
+        <section class="panel guard-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Readiness Guard</h2>
+              <p>Live mode is blocked until credentials are complete</p>
             </div>
-            <div id="events" class="events"></div>
-          </section>
-        </div>
+            <span id="readinessStatus">checking</span>
+          </div>
+          <div id="readiness" class="readiness"></div>
+        </section>
+      </section>
 
-        <aside class="side-column">
-          <section class="panel">
-            <div class="panel-heading">
-              <h2>Readiness</h2>
-              <span id="readinessStatus">checking</span>
+      <section class="operations-grid">
+        <section class="panel ledger-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>x402 Payment Ledger</h2>
+              <p>Provider, step, network, asset, and amount</p>
             </div>
-            <div id="readiness" class="readiness"></div>
-          </section>
+            <span id="ledgerCount">0 events</span>
+          </div>
+          <div id="ledger" class="ledger"></div>
+        </section>
 
+        <section class="panel events-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Audit Event Stream</h2>
+              <p>Append-only runtime activity</p>
+            </div>
+            <span id="eventCount">0 events</span>
+          </div>
+          <div id="events" class="events"></div>
+        </section>
+
+        <aside class="side-stack">
           <section class="panel">
-            <div class="panel-heading">
-              <h2>Last Runs</h2>
+            <div class="panel-heading compact">
+              <div>
+                <h2>Last Runs</h2>
+                <p>Recent autonomous executions</p>
+              </div>
             </div>
             <div id="runs" class="runs"></div>
           </section>
 
           <section class="panel">
-            <div class="panel-heading">
-              <h2>Ledger</h2>
-            </div>
-            <div id="ledger" class="ledger"></div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-heading">
-              <h2>Database/API</h2>
+            <div class="panel-heading compact">
+              <div>
+                <h2>Database/API</h2>
+                <p>Local proof store and exposed endpoints</p>
+              </div>
               <span id="dbStatus">json-file</span>
             </div>
             <div id="dbSummary" class="db-summary"></div>
