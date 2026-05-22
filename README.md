@@ -1,139 +1,116 @@
 # SynapsePay Autonomous Agent
 
-SynapsePay Autonomous Agent sengaja tidak mengejar website mewah. Fokusnya adalah bukti agent yang jalan sendiri:
+**Target category:** Ace Data Cloud Usage (x402 Facilitator)
 
-- scheduled trigger tanpa approval manual
-- SAP tool discovery sebelum eksekusi
-- 3 distinct Ace Data Cloud AI service capabilities
-- Sentinel verification
-- x402-style payment ledger dan receipt per langkah
-- policy guard agar volume tidak terlihat seperti loop spam
+SynapsePay is an autonomous SAP agent that discovers SAP tools, executes three Ace Data Cloud AI capabilities, records x402-style payment events, requests Sentinel verification, and writes an auditable proof report without manual approval inside policy limits.
 
-Default runtime adalah `demo`, jadi aman dijalankan tanpa private key. Mode `live` memakai adapter SAP SDK dan Ace x402 ketika environment, wallet, dan optional packages sudah siap.
+This project is intentionally optimized for judges who need to inspect a repo and written submission quickly. The frontend is a proof dashboard, but the core value is the backend agent workflow.
 
 ## Live Demo
 
-GitHub Pages demo:
+GitHub Pages frontend:
 
 https://asroryandesfar-art.github.io/synapsepay-autonomous-agent/
 
-Catatan: GitHub Pages hanya bisa menjalankan frontend static. Link demo memakai static proof replay agar dashboard bisa dilihat publik. Backend autonomous agent yang benar-benar mengeksekusi workflow tetap dijalankan dengan `npm.cmd start` atau dihosting di platform Node.
-
-## Run
+GitHub Pages runs a static proof replay because Pages cannot host a Node agent/API. The real autonomous agent runs locally or on any Node host with:
 
 ```bash
 npm.cmd start
 ```
 
-Buka `http://127.0.0.1:8787`.
+## Why This Fits Ace Data Cloud Usage
 
-Run satu workflow dari terminal:
+The default workflow consumes three Ace Data Cloud style AI capabilities:
+
+- `openai.chat.completions` for reasoning
+- `openai.embeddings.create` for risk signal generation
+- `images.generate` for demo artifact generation
+
+Every Ace execution step becomes a payment ledger event with provider, step id, network, asset, amount, mode, and receipt metadata. Sentinel verification is recorded as a separate SAP-side payment proof.
+
+## Judge Quick Review
+
+| Judging signal | Where to inspect |
+| --- | --- |
+| Autonomous workflow | `src/agent/autonomousAgent.js` |
+| Ace Data Cloud execution | `src/integrations/aceDataCloud.js`, `config/workflow.json` |
+| x402 facilitator path | `src/integrations/aceDataCloud.js`, `package.json` dependencies |
+| SAP integration | `src/integrations/sapClient.js`, `config/agent.manifest.json` |
+| Sentinel verification | `src/agent/autonomousAgent.js`, `src/integrations/sapClient.js` |
+| Payment ledger and volume metrics | `src/agent/policy.js`, `src/agent/stateStore.js` |
+| Readiness/live safety guard | `src/readiness.js`, `.env.example` |
+| Public proof dashboard | `public/index.html`, `public/app.js`, `public/styles.css` |
+
+## Proof Matrix
+
+| Requirement | Implementation |
+| --- | --- |
+| Highest Ace usage strategy | The agent executes three distinct Ace capabilities per proof run. |
+| x402 payment handling | Uses `x402-fetch` and `viem` for live order payment flow, with demo-safe receipt fallback. |
+| SAP agent behavior | Includes SAP discovery adapter, manifest, wallet config, and registration script. |
+| Autonomous execution | Scheduler, boot run, manual run, and safe demo run are all supported by the same agent class. |
+| Anti-spam policy | Budget and confidence checks block suspicious or over-budget runs. |
+| Auditability | State, event log, ledger, and per-run JSON reports are written to local storage. |
+
+## Run Locally
 
 ```bash
-node scripts/run-once.js
+npm.cmd install
+npm.cmd start
 ```
 
-Tes dasar:
+Open:
+
+```text
+http://127.0.0.1:8787/
+```
+
+Run one workflow from terminal:
+
+```bash
+npm.cmd run agent:once
+```
+
+Run checks:
 
 ```bash
 npm.cmd test
-```
-
-Publish readiness check:
-
-```bash
 npm.cmd run publish:check
-```
-
-Di Windows, kalau `npm` PowerShell diblokir execution policy, gunakan `npm.cmd` untuk script package:
-
-```bash
-npm.cmd test
-npm.cmd start
 ```
 
 ## Live Mode
 
-1. Copy `.env.example` menjadi `.env`.
-2. Isi `SAP_RPC_URL`, `SAP_WALLET_PATH`, `ACE_PLATFORM_TOKEN`, `ACE_X402_PRIVATE_KEY`, dan `ACE_X402_ORDER_ID` bila ingin membayar order Ace.
-3. Generate wallet agent bila belum ada:
+1. Copy `.env.example` to `.env`.
+2. Fill `SAP_RPC_URL`, `SAP_WALLET_PATH`, `ACE_PLATFORM_TOKEN`, `ACE_X402_PRIVATE_KEY`, and `ACE_X402_ORDER_ID`.
+3. Generate a wallet if needed:
 
 ```bash
 npm.cmd run wallet:generate
 ```
 
-4. Install live dependencies:
-
-```bash
-npm.cmd install @oobe-protocol-labs/synapse-sap-sdk @coral-xyz/anchor @solana/web3.js x402-fetch viem
-```
-
-5. Cek readiness:
+4. Check live readiness:
 
 ```bash
 npm.cmd run live:check
 ```
 
-6. Setelah wallet funded dan semua secret sudah valid, set:
+5. Register the SAP agent after wallet funding and dry-run validation:
+
+```bash
+npm.cmd run sap:register
+```
+
+6. Enable on-chain mutation only after credentials, wallet funding, and risk checks are complete:
 
 ```bash
 AUTONOMY_MODE=live
 ALLOW_ONCHAIN_MUTATIONS=true
 ```
 
-Biarkan `ALLOW_ONCHAIN_MUTATIONS=false` untuk dry run live integration. Ubah menjadi `true` hanya setelah wallet, escrow, dan simulasi SAP sudah siap.
+## Important Safety Note
 
-Register agent:
+The repo does not fake live funded volume. If live credentials are missing, the dashboard shows `needs-secrets` and disables unsafe live execution. Demo proof mode is clearly separated from live mode so judges can inspect the implementation without risking keys or funds.
 
-```bash
-npm.cmd run sap:register
-```
+## Submission Text
 
-Reset evidence lokal sebelum membuat demo final agar tidak ada volume demo yang ikut terlihat:
-
-```bash
-npm.cmd run runtime:reset
-```
-
-## Demo Evidence
-
-Runtime menulis bukti ke:
-
-- `data/state.json` untuk status, metrics, runs, ledger
-- `data/events.jsonl` untuk audit log append-only
-- `data/reports/<runId>.json` untuk laporan workflow lengkap
-
-Dashboard hanya membaca API lokal:
-
-- `GET /api/status`
-- `GET /api/readiness`
-- `GET /api/events`
-- `GET /api/runs`
-- `GET /api/ledger`
-- `GET /api/reports/latest`
-- `GET /api/db`
-- `POST /api/run`
-- `POST /api/demo/run`
-- `POST /api/start`
-- `POST /api/stop`
-
-## Bounty Alignment
-
-- Payment volume: semua call berbayar masuk ke ledger dengan amount, network, asset, provider, receipt.
-- Autonomous workflow: `AUTO_START=true` dan `RUN_ON_BOOT=true` menjalankan agent dari trigger ke report tanpa input manual.
-- AI execution: workflow default memanggil tiga capability Ace, yaitu chat reasoning, embedding/risk signal, dan image/demo artifact.
-- SAP integration: adapter melakukan discovery, manifest disiapkan di `config/agent.manifest.json`, dan Sentinel dipanggil sebagai langkah wajib.
-
-## Publish Notes
-
-- Jangan commit `.env`, `keys/agent.json`, atau `data/`; semuanya sudah masuk `.gitignore`.
-- Gunakan `SUBMISSION.md` untuk checklist final dan draft post.
-- Gunakan `DEMO_SCRIPT.md` sebagai alur video demo.
-- Dashboard sengaja men-disable run live bila readiness belum lengkap, supaya tidak terlihat seperti agent palsu yang crash saat credential belum valid.
-
-## References
-
-- [Synapse SAP docs](https://explorer.oobeprotocol.ai/docs)
-- [Synapse SAP SDK overview](https://explorer.oobeprotocol.ai/docs/sdk/overview)
-- [Synapse SAP escrow/x402 API](https://explorer.oobeprotocol.ai/docs/sdk/escrow-api)
-- [Ace Data Cloud x402 guide](https://docs.acedata.cloud/en/guides/x402)
+Use `SUBMISSION.md` for the paste-ready bounty submission.

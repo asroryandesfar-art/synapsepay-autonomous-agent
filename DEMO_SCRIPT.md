@@ -1,16 +1,35 @@
-# SynapsePay Demo Script
+# SynapsePay Repo Review Guide
 
-Use this as a 60-90 second video outline.
+This bounty submission does not require a video. Use this guide if a reviewer wants to inspect the repo quickly.
 
-1. Show the dashboard at `http://127.0.0.1:8787/`.
-2. Point at readiness: explain whether this is demo, live-guarded, or live-ready.
-3. Show the workflow list: SAP discovery, 3 Ace capabilities, Sentinel verification, x402 ledger.
-4. Start one run only when readiness allows it.
-5. Show the event stream: trigger, policy assessment, Ace calls, Sentinel call, payment summary.
-6. Open the latest report JSON and show:
-   - `autonomous: true`
-   - selected SAP tools
-   - three Ace `distinctServices`
-   - Sentinel verdict
-   - payment ledger receipts
-7. Close by showing `SUBMISSION.md` category fit.
+## Read First
+
+1. `README.md` for category fit and architecture.
+2. `SUBMISSION.md` for the paste-ready bounty text.
+3. `config/workflow.json` for the three Ace Data Cloud capabilities.
+4. `src/agent/autonomousAgent.js` for the autonomous workflow.
+5. `src/integrations/aceDataCloud.js` for x402/Ace execution.
+6. `src/integrations/sapClient.js` for SAP discovery and Sentinel.
+
+## Local Proof
+
+```bash
+npm.cmd install
+npm.cmd run publish:check
+npm.cmd start
+```
+
+Open:
+
+```text
+http://127.0.0.1:8787/
+```
+
+Click **Demo Proof** and check:
+
+- `autonomous: true` in the generated report
+- three Ace `distinctServices`
+- Sentinel verdict
+- x402-style ledger rows
+- payment volume metric
+- readiness guard for live credentials

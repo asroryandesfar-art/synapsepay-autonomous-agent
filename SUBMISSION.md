@@ -1,54 +1,72 @@
-# SynapsePay Submission Guide
+# SynapsePay Bounty Submission
 
-## Category Fit
+## Category
 
-This project is built for the autonomous-agent judging criteria:
+**Primary category:** Ace Data Cloud Usage (x402 Facilitator)
 
-- SAP tool discovery before execution
-- Ace Data Cloud AI execution with three distinct capabilities
-- x402 payment handling and receipts
-- Sentinel verification
-- scheduled trigger-to-payment workflow with no human approval inside policy limits
+**Secondary relevance:** General SAP payment workflow, because the agent also records SAP/Sentinel payment events and includes live escrow/readiness guards.
 
-## Demo Flow
+## Paste-Ready Submission
 
-1. Start the local console:
+SynapsePay is an autonomous SAP agent built for Ace Data Cloud x402 usage. The agent discovers SAP tools, selects a valid workflow, executes three Ace Data Cloud AI capabilities, records x402-style payment events, requests Sentinel verification, and writes a complete audit report without manual approval inside policy limits.
+
+The project targets the **Ace Data Cloud Usage (x402 Facilitator)** category because every proof run consumes three distinct Ace service capabilities: reasoning, embedding/risk signal, and image/demo artifact generation. Each service call is converted into a ledger entry with provider, step id, network, asset, amount, and receipt metadata.
+
+Repo:
+https://github.com/asroryandesfar-art/synapsepay-autonomous-agent
+
+Live frontend demo:
+https://asroryandesfar-art.github.io/synapsepay-autonomous-agent/
+
+Key proof points:
+
+- Autonomous trigger-to-report workflow in `src/agent/autonomousAgent.js`
+- Ace Data Cloud execution adapter in `src/integrations/aceDataCloud.js`
+- x402 live payment path using `x402-fetch` and `viem`
+- SAP discovery and Sentinel adapter in `src/integrations/sapClient.js`
+- Agent manifest in `config/agent.manifest.json`
+- Workflow definition with three Ace capabilities in `config/workflow.json`
+- Readiness guard that blocks unsafe live execution in `src/readiness.js`
+- Payment ledger, event stream, and run reports exposed through the dashboard/API
+
+The GitHub Pages demo shows a static proof replay because GitHub Pages cannot run a Node backend. The real autonomous agent runs with `npm.cmd start`, and `npm.cmd run publish:check` verifies syntax, tests, dependency imports, and live-readiness status.
+
+## Evaluation Checklist
+
+Run:
 
 ```bash
+npm.cmd install
+npm.cmd test
+npm.cmd run publish:check
 npm.cmd start
 ```
 
-2. Open:
+Open:
 
 ```text
 http://127.0.0.1:8787/
 ```
 
-3. Show the readiness panel first. In `demo` it should be ready. In `live`, it should clearly show missing credentials or the mutation guard.
-4. Run one workflow only after readiness is green.
-5. Open the generated report in `data/reports/<runId>.json`.
-6. Show the ledger entries: Ace service calls, Sentinel audit, and x402-style receipts.
+Then press **Demo Proof** to inspect:
 
-## Live Launch Checklist
+- one autonomous proof run
+- 3 Ace AI service calls
+- 4 total payment events
+- x402-style ledger entries
+- Sentinel `pass` verdict
+- latest report proof
+- readiness guard for live credentials
 
-Before turning on real network execution:
+## Why It Should Score
 
-- `npm.cmd run live:check` passes for SAP RPC, wallet, Ace token, Ace x402 private key, and order id.
-- The Solana wallet in `SAP_AGENT_WALLET` is funded.
-- `ALLOW_ONCHAIN_MUTATIONS=true` is set only after dry-run validation.
-- `npm.cmd run sap:register` returns an on-chain signature.
-- `npm.cmd run runtime:reset` has been run before recording the final demo.
-- `AUTO_START=true` and `RUN_ON_BOOT=true` are set only when the agent should run unattended.
+SynapsePay is not just a frontend. It is a repo-level autonomous workflow:
 
-## Suggested X Post
+1. It evaluates readiness and policy before execution.
+2. It discovers SAP tools.
+3. It executes multiple Ace AI capabilities.
+4. It records payment volume per step.
+5. It verifies with Sentinel.
+6. It stores the result as an auditable report.
 
-Built SynapsePay Autonomous Agent for the OOBE x Ace bounty.
-
-It discovers SAP tools, executes 3 Ace AI capabilities, records x402 payment receipts, calls Sentinel, and writes an auditable run report without manual approval.
-
-Category: Ace Data Cloud Usage + SAP payment workflow.
-
-Repo: <your GitHub URL>
-Demo: <your video URL>
-
-Tag: @OOBEonSol @AceDataCloud
+This directly matches the Ace Data Cloud usage goal: agent-driven AI service consumption with x402-oriented payment proof.
