@@ -11,6 +11,14 @@ SynapsePay Autonomous Agent sengaja tidak mengejar website mewah. Fokusnya adala
 
 Default runtime adalah `demo`, jadi aman dijalankan tanpa private key. Mode `live` memakai adapter SAP SDK dan Ace x402 ketika environment, wallet, dan optional packages sudah siap.
 
+## Live Demo
+
+GitHub Pages demo:
+
+https://asroryandesfar-art.github.io/synapsepay-autonomous-agent/
+
+Catatan: GitHub Pages hanya bisa menjalankan frontend static. Link demo memakai static proof replay agar dashboard bisa dilihat publik. Backend autonomous agent yang benar-benar mengeksekusi workflow tetap dijalankan dengan `npm.cmd start` atau dihosting di platform Node.
+
 ## Run
 
 ```bash
