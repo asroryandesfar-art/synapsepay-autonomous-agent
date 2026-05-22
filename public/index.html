@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SynapsePay Autonomous Agent</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <h1>SynapsePay Autonomous Agent</h1>
+          <p id="subtitle">SAP discovery, Ace execution, Sentinel audit, x402 ledger</p>
+        </div>
+        <div class="actions">
+          <button id="runDemo" type="button" class="secondary">Demo Proof</button>
+          <button id="runNow" type="button">Run Once</button>
+          <button id="toggleAgent" type="button">Start Auto</button>
+        </div>
+      </header>
+
+      <section class="status-grid" aria-label="Agent metrics">
+        <article>
+          <span>Status</span>
+          <strong id="status">...</strong>
+        </article>
+        <article>
+          <span>Payment Volume</span>
+          <strong id="volume">$0.00</strong>
+        </article>
+        <article>
+          <span>Ace Calls</span>
+          <strong id="aceCalls">0</strong>
+        </article>
+        <article>
+          <span>Sentinel Calls</span>
+          <strong id="sentinelCalls">0</strong>
+        </article>
+      </section>
+
+      <section class="layout">
+        <div class="main-column">
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Workflow</h2>
+              <span id="mode">demo</span>
+            </div>
+            <ol id="workflow" class="timeline"></ol>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Latest Evidence</h2>
+              <span id="reportStatus">empty</span>
+            </div>
+            <div id="reportSummary" class="report-summary"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Event Stream</h2>
+              <span id="eventCount">0 events</span>
+            </div>
+            <div id="events" class="events"></div>
+          </section>
+        </div>
+
+        <aside class="side-column">
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Readiness</h2>
+              <span id="readinessStatus">checking</span>
+            </div>
+            <div id="readiness" class="readiness"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Last Runs</h2>
+            </div>
+            <div id="runs" class="runs"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Ledger</h2>
+            </div>
+            <div id="ledger" class="ledger"></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>Database/API</h2>
+              <span id="dbStatus">json-file</span>
+            </div>
+            <div id="dbSummary" class="db-summary"></div>
+          </section>
+        </aside>
+      </section>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

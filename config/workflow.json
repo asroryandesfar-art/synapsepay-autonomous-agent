@@ -1,0 +1,54 @@
+{
+  "name": "SynapsePay Autonomous Payment Workflow",
+  "objective": "Discover SAP-capable tools, execute AI analysis through Ace Data Cloud capabilities, call Sentinel for verification, and settle/pay with x402-style receipts without manual approval.",
+  "trigger": {
+    "type": "scheduled",
+    "signalKeywords": ["sap", "x402", "agent", "solana", "payment"],
+    "minimumScore": 0.62
+  },
+  "requiredCapabilities": [
+    "sap:discovery",
+    "ace:ai-execution",
+    "x402:payment",
+    "sentinel:verification"
+  ],
+  "aceServices": [
+    {
+      "id": "market-brief",
+      "kind": "openai.chat.completions",
+      "capability": "reasoning",
+      "estimatedUsd": 0.04,
+      "prompt": "Summarize the current agent-payment opportunity, focus on concrete autonomous workflow and legitimate payment volume."
+    },
+    {
+      "id": "workflow-risk",
+      "kind": "openai.embeddings.create",
+      "capability": "risk-signal",
+      "estimatedUsd": 0.03,
+      "prompt": "Embed and score the run evidence for spam, wash trading, missing payment proof, and missing SAP discovery."
+    },
+    {
+      "id": "demo-asset",
+      "kind": "images.generate",
+      "capability": "demo-artifact",
+      "estimatedUsd": 0.06,
+      "prompt": "Create a concise demo visual concept for an autonomous on-chain AI payment workflow."
+    }
+  ],
+  "sapDiscovery": {
+    "protocols": ["SAP", "x402", "A2A"],
+    "capabilityQuery": ["ai", "sentinel", "payment", "analysis"],
+    "maxTools": 8
+  },
+  "sentinel": {
+    "toolName": "sentinel-audit",
+    "estimatedUsd": 0.02,
+    "required": true
+  },
+  "settlement": {
+    "mode": "x402",
+    "network": "base",
+    "asset": "USDC",
+    "ledgerCurrency": "USD"
+  }
+}

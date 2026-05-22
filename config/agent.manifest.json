@@ -1,0 +1,41 @@
+{
+  "name": "SynapsePay Autonomous Agent",
+  "description": "Runs scheduled SAP discovery, Ace Data Cloud AI execution, Sentinel verification, and x402 payment settlement without human approval inside configured policy limits.",
+  "capabilities": [
+    {
+      "id": "sap:discovery",
+      "protocolId": "SAP",
+      "version": "0.9.3",
+      "description": "Discover SAP tools and agents before selecting execution services."
+    },
+    {
+      "id": "ace:ai-execution",
+      "protocolId": "AceDataCloud",
+      "version": "x402",
+      "description": "Execute at least three distinct AI service capabilities through Ace Data Cloud."
+    },
+    {
+      "id": "x402:payment",
+      "protocolId": "x402",
+      "version": "1",
+      "description": "Generate payment receipts for each paid service call."
+    },
+    {
+      "id": "sentinel:verification",
+      "protocolId": "SAP",
+      "version": "0.9.3",
+      "description": "Call Synapse Sentinel once per workflow run for audit evidence."
+    }
+  ],
+  "pricing": [
+    {
+      "tierId": "standard",
+      "pricePerCall": 1000,
+      "rateLimit": 60,
+      "tokenType": "sol",
+      "settlementMode": "x402"
+    }
+  ],
+  "protocols": ["SAP", "x402", "A2A", "AceDataCloud"],
+  "x402Endpoint": "http://127.0.0.1:8787/api/x402"
+}
