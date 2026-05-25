@@ -1,39 +1,67 @@
 # SynapsePay Bounty Submission
 
-## Category
+## Primary Category
 
-**Primary category:** Ace Data Cloud Usage (x402 Facilitator)
+**Ace Data Cloud Usage (x402 Facilitator)**
 
-**Secondary relevance:** General SAP payment workflow, because the agent also records SAP/Sentinel payment events and includes live escrow/readiness guards.
+## Secondary Relevance
+
+**General Payment Volume on SAP**
+
+SynapsePay also records SAP/Sentinel payment events, exposes an x402 callback endpoint, and maintains a payment ledger. The primary competition angle remains Ace Data Cloud usage because the agent consumes multiple Ace AI services per autonomous run.
 
 ## Paste-Ready Submission
 
-SynapsePay is an autonomous SAP agent built for Ace Data Cloud x402 usage. The agent discovers SAP tools, selects a valid workflow, executes three Ace Data Cloud AI capabilities, records x402-style payment events, requests Sentinel verification, and writes a complete audit report without manual approval inside policy limits.
+SynapsePay is an autonomous SAP payment agent for Ace Data Cloud x402 usage.
 
-The project targets the **Ace Data Cloud Usage (x402 Facilitator)** category because every proof run consumes three distinct Ace service capabilities: reasoning, embedding/risk signal, and image/demo artifact generation. Each service call is converted into a ledger entry with provider, step id, network, asset, amount, and receipt metadata.
+This is not just a payment dashboard. The agent independently evaluates readiness, discovers SAP-capable services, plans a workflow, executes Ace Data Cloud AI tools, records x402-style payment receipts, verifies the run with Sentinel, and writes an auditable JSON report without manual approval inside configured policy limits.
 
 Repo:
+
 https://github.com/asroryandesfar-art/synapsepay-autonomous-agent
 
-Live frontend demo:
+Live reviewer preview:
+
 https://asroryandesfar-art.github.io/synapsepay-autonomous-agent/
 
-Key proof points:
+The strongest category fit is **Ace Data Cloud Usage (x402 Facilitator)**. Each proof run includes three Ace service calls:
 
-- Autonomous trigger-to-report workflow in `src/agent/autonomousAgent.js`
-- Ace Data Cloud execution adapter in `src/integrations/aceDataCloud.js`
-- x402 live payment path using `x402-fetch` and `viem`
-- SAP discovery and Sentinel adapter in `src/integrations/sapClient.js`
-- Agent manifest in `config/agent.manifest.json`
-- Workflow definition with three Ace capabilities in `config/workflow.json`
-- Readiness guard that blocks unsafe live execution in `src/readiness.js`
-- Payment ledger, event stream, and run reports exposed through the dashboard/API
+- `openai.chat.completions` for reasoning and market/payment brief
+- `openai.embeddings.create` for risk/spam signal generation
+- `images.generate` for demo artifact generation
 
-The GitHub Pages demo shows a static proof replay because GitHub Pages cannot run a Node backend. The real autonomous agent runs with `npm.cmd start`, and `npm.cmd run publish:check` verifies syntax, tests, dependency imports, and live-readiness status.
+Each Ace execution becomes a ledger entry with provider, step id, network, asset, amount, mode, and receipt metadata. The workflow then calls Sentinel for verification and stores the final report in `data/reports/*.json`.
 
-## Evaluation Checklist
+## Why This Is Autonomous
 
-Run:
+The agent workflow is implemented in `src/agent/autonomousAgent.js`:
+
+1. Trigger starts from schedule, boot, manual API call, or demo proof.
+2. `assertRunReady` blocks unsafe live execution when credentials or wallet setup are missing.
+3. The planner scores the signal before deciding whether to run.
+4. SAP discovery selects relevant tools.
+5. Policy checks budget and confidence limits.
+6. Ace Data Cloud services execute automatically.
+7. Every paid service call is converted into a payment ledger event.
+8. Sentinel verifies the evidence.
+9. The agent writes state, events, ledger, and a per-run report.
+
+## Key Proof Points
+
+| Claim | Evidence |
+| --- | --- |
+| Autonomous trigger-to-report workflow | `src/agent/autonomousAgent.js` |
+| Ace Data Cloud usage | `src/integrations/aceDataCloud.js`, `config/workflow.json` |
+| Three Ace capabilities per run | `config/workflow.json` |
+| x402 payment/facilitator path | `src/integrations/aceDataCloud.js`, `src/server.js`, `package.json` |
+| SAP discovery | `src/integrations/sapClient.js` |
+| SAP registration/manifest | `scripts/register-agent.js`, `config/agent.manifest.json` |
+| Sentinel audit | `src/integrations/sapClient.js`, `src/agent/autonomousAgent.js` |
+| Payment volume ledger | `src/agent/policy.js`, `src/agent/stateStore.js` |
+| API/dashboard demo | `src/server.js`, `public/`, root GitHub Pages files |
+| Live safety guard | `src/readiness.js`, `.env.example` |
+
+## Reviewer Commands
 
 ```bash
 npm.cmd install
@@ -48,25 +76,48 @@ Open:
 http://127.0.0.1:8787/
 ```
 
-Then press **Demo Proof** to inspect:
+Run a local proof:
 
-- one autonomous proof run
-- 3 Ace AI service calls
-- 4 total payment events
-- x402-style ledger entries
-- Sentinel `pass` verdict
-- latest report proof
-- readiness guard for live credentials
+```bash
+npm.cmd run agent:once
+```
+
+Or use the API/dashboard button:
+
+```text
+POST /api/demo/run
+```
+
+## What Reviewers Should See
+
+After a proof run, reviewers can inspect:
+
+- 3 Ace AI service executions
+- 4 payment events total, including Sentinel verification
+- payment ledger entries with provider, network, asset, amount, and receipt metadata
+- `data/events.jsonl` append-only event stream
+- `data/state.json` metrics and ledger
+- `data/reports/*.json` final run report
+- readiness guard separating demo from live funded execution
 
 ## Why It Should Score
 
-SynapsePay is not just a frontend. It is a repo-level autonomous workflow:
+SynapsePay directly matches the bounty goals:
 
-1. It evaluates readiness and policy before execution.
-2. It discovers SAP tools.
-3. It executes multiple Ace AI capabilities.
-4. It records payment volume per step.
-5. It verifies with Sentinel.
-6. It stores the result as an auditable report.
+- **Payment volume:** every service step records a payment event and contributes to ledger volume.
+- **Autonomous workflow:** the agent goes from trigger to verified report without manual approval.
+- **AI execution:** the workflow executes multiple Ace Data Cloud AI capabilities per run.
+- **SAP integration:** the repo includes SAP discovery, a SAP agent manifest, Sentinel verification, registration script, and x402 callback endpoint.
 
-This directly matches the Ace Data Cloud usage goal: agent-driven AI service consumption with x402-oriented payment proof.
+The frontend is intentionally secondary. The value is the autonomous backend workflow plus auditable payment evidence.
+
+## Important Note
+
+The GitHub Pages demo is a static reviewer preview because GitHub Pages cannot host the Node agent/API. Live funded execution requires `.env` credentials, wallet funding, readiness validation, and:
+
+```text
+AUTONOMY_MODE=live
+ALLOW_ONCHAIN_MUTATIONS=true
+```
+
+The repo does not mislabel demo volume as funded on-chain volume.
