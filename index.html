@@ -3,26 +3,172 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta http-equiv="refresh" content="0; url=public/" />
+    <meta name="description" content="SynapsePay Autonomous Agent dashboard for SAP discovery, Ace execution, Sentinel audit, and x402 payment evidence." />
     <title>SynapsePay Autonomous Agent</title>
-    <style>
-      body {
-        margin: 0;
-        min-height: 100vh;
-        display: grid;
-        place-items: center;
-        background: #142129;
-        color: #fff;
-        font: 16px/1.5 system-ui, sans-serif;
-      }
-
-      a {
-        color: #7ee0ce;
-        font-weight: 800;
-      }
-    </style>
+    <link rel="icon" href="public/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <p>Opening <a href="public/">SynapsePay Autonomous Agent live demo</a>...</p>
+    <div class="app-container">
+      <header class="header">
+        <div class="header-content">
+          <div class="header-left">
+            <h1 class="app-title">SynapsePay Autonomous Agent</h1>
+            <span id="statusBadge" class="status-badge">Development</span>
+          </div>
+          <div class="header-right">
+            <div id="connectionStatus" class="connection-status" aria-live="polite">
+              <span class="status-dot"></span>
+              <span>Connecting</span>
+            </div>
+            <button id="refreshBtn" class="btn btn-secondary" type="button">
+              <span class="btn-icon" aria-hidden="true">R</span>
+              <span class="btn-text">Refresh</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="main-content">
+        <section class="metrics-section" aria-labelledby="metricsTitle">
+          <h2 id="metricsTitle" class="section-title">Autonomous Execution Dashboard</h2>
+          <div class="metrics-grid">
+            <article class="metric-card">
+              <div class="metric-label">Payment Volume</div>
+              <div id="volumeValue" class="metric-value">$0</div>
+              <div id="volumeSub" class="metric-sub">0 successful runs</div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-label">Successful Runs</div>
+              <div id="runValue" class="metric-value">0</div>
+              <div id="runSub" class="metric-sub">0% completion</div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-label">Ace Data Cloud</div>
+              <div id="aceValue" class="metric-value">0</div>
+              <div id="aceSub" class="metric-sub">AI executed</div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-label">Sentinel Audit</div>
+              <div id="sentinelValue" class="metric-value">0</div>
+              <div id="sentinelSub" class="metric-sub">Verified</div>
+            </article>
+            <article class="metric-card">
+              <div class="metric-label">SAP Protocol</div>
+              <div id="sapValue" class="metric-value">0</div>
+              <div id="sapSub" class="metric-sub">Protocol calls</div>
+            </article>
+            <article class="metric-card readiness-card">
+              <div class="metric-label">Live Readiness</div>
+              <div id="readinessIndicator" class="readiness-indicator">
+                <span class="readiness-status needs-secrets">Checking</span>
+              </div>
+              <div id="readinessGuards" class="readiness-guards">Waiting for status</div>
+            </article>
+          </div>
+        </section>
+
+        <section class="workflow-section" aria-labelledby="workflowTitle">
+          <h2 id="workflowTitle" class="section-title">Autonomous Workflow</h2>
+          <div class="workflow-timeline">
+            <div class="timeline-step completed">
+              <div class="timeline-marker">1</div>
+              <div class="timeline-content">
+                <div class="timeline-title">SAP Discovery</div>
+                <div class="timeline-desc">Agent discovers payable services and validates budget policy.</div>
+              </div>
+            </div>
+            <div class="timeline-step completed">
+              <div class="timeline-marker">2</div>
+              <div class="timeline-content">
+                <div class="timeline-title">Ace Execution</div>
+                <div class="timeline-desc">Agent consumes Ace Data Cloud tools without manual approval.</div>
+              </div>
+            </div>
+            <div class="timeline-step completed">
+              <div class="timeline-marker">3</div>
+              <div class="timeline-content">
+                <div class="timeline-title">x402 Escrow Payment</div>
+                <div class="timeline-desc">Every tool call records provider, asset, network, and amount.</div>
+              </div>
+            </div>
+            <div class="timeline-step completed">
+              <div class="timeline-marker">4</div>
+              <div class="timeline-content">
+                <div class="timeline-title">Sentinel Verification</div>
+                <div class="timeline-desc">Final report is gated by audit evidence before completion.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="controls-section" aria-labelledby="controlsTitle">
+          <h2 id="controlsTitle" class="section-title">Agent Controls</h2>
+          <div class="controls-card">
+            <div class="readiness-check">
+              <h3>Readiness Gate</h3>
+              <div class="checklist">
+                <div class="checklist-item"><span id="checkDb" class="check-icon">--</span><span>Database</span></div>
+                <div class="checklist-item"><span id="checkApi" class="check-icon">--</span><span>API</span></div>
+                <div class="checklist-item"><span id="checkAce" class="check-icon">--</span><span>Ace</span></div>
+                <div class="checklist-item"><span id="checkSentinel" class="check-icon">--</span><span>Sentinel</span></div>
+                <div class="checklist-item"><span id="checkSap" class="check-icon">--</span><span>SAP</span></div>
+              </div>
+            </div>
+            <div class="demo-actions">
+              <button id="demoBtnProof" class="btn btn-primary" type="button">
+                <span class="btn-icon" aria-hidden="true">></span>
+                <span class="btn-text">Demo Proof</span>
+              </button>
+              <button id="demoBtnOnce" class="btn btn-secondary" type="button">
+                <span class="btn-icon" aria-hidden="true">.</span>
+                <span class="btn-text">Run Once</span>
+              </button>
+            </div>
+            <div id="demoStatus" class="demo-status" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section class="evidence-section" aria-labelledby="evidenceTitle">
+          <h2 id="evidenceTitle" class="section-title">Latest Evidence Report</h2>
+          <div id="evidenceCard" class="evidence-card"></div>
+        </section>
+
+        <section class="ledger-section" aria-labelledby="ledgerTitle">
+          <h2 id="ledgerTitle" class="section-title">x402 Payment Ledger</h2>
+          <div id="ledgerContainer" class="ledger-container"></div>
+        </section>
+
+        <section class="events-section" aria-labelledby="eventsTitle">
+          <h2 id="eventsTitle" class="section-title">Audit Event Stream</h2>
+          <div class="events-controls">
+            <input id="eventFilter" class="search-input" type="search" placeholder="Filter events" />
+            <span id="eventCount" class="event-count">0 events</span>
+          </div>
+          <div id="eventsList" class="events-list"></div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <div class="footer-content">
+          <span>SAP discovery</span>
+          <span class="footer-sep">/</span>
+          <span>Ace AI execution</span>
+          <span class="footer-sep">/</span>
+          <span>x402 payments</span>
+          <span class="footer-sep">/</span>
+          <span id="lastUpdate">Last update: waiting</span>
+        </div>
+      </footer>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay" aria-hidden="true">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <div>Executing autonomous workflow...</div>
+      </div>
+    </div>
+
+    <script src="app.js" defer></script>
   </body>
 </html>
